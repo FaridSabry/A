@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioCrew | Four Minds • One Sound | هندسة الأنظمة الصوتية</title>
+    <meta name="description" content="AudioCrew - الفريق الاحترافي المتخصص في هندسة وتكامل الأنظمة الصوتية للقطاعات الدينية والمباني العامة والساحات.">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- React 18 & Babel for JSX -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#00F0FF',
+                            deepBlue: '#0055FF',
+                            orange: '#FF5500',
+                            neonOrange: '#FF8800',
+                            darkBg: '#090B10',
+                            cardDark: '#121620',
+                            lightBg: '#F4F6FB',
+                            cardLight: '#FFFFFF',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Cairo', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2.5s ease-in-out infinite alternate',
+                        'spin-slow': 'spin 15s linear infinite',
+                        'float': 'float 4s ease-in-out infinite',
+                        'wave-bar': 'waveBar 1.2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%': { filter: 'drop-shadow(0 0 5px rgba(0,240,255,0.4)) drop-shadow(0 0 15px rgba(255,85,0,0.3))' },
+                            '100%': { filter: 'drop-shadow(0 0 20px rgba(0,240,255,0.9)) drop-shadow(0 0 30px rgba(255,85,0,0.8))' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        waveBar: {
+                            '0%': { height: '20%' },
+                            '100%': { height: '100%' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+        
+        /* Glassmorphism Design Tokens */
+        .glass-dark {
+            background: rgba(18, 22, 32, 0.78);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-dark:hover {
+            border-color: rgba(0, 240, 255, 0.35);
+            box-shadow: 0 12px 35px -10px rgba(0, 240, 255, 0.18);
+        }
+
+        .glass-light {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.07);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+        }
+        .glass-light:hover {
+            border-color: rgba(0, 85, 255, 0.35);
+            box-shadow: 0 14px 40px -10px rgba(0, 85, 255, 0.15);
+        }
+
+        /* Custom Audio Waves & Scrollbars */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #090B10; }
+        ::-webkit-scrollbar-thumb { background: #1E2638; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00F0FF; }
+
+        .gradient-text-brand {
+            background: linear-gradient(135deg, #00F0FF 0%, #0055FF 45%, #FF5500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slider-custom {
+            accent-color: #00F0FF;
+        }
+    </style>
+</head>
+<body class="bg-brand-darkBg text-gray-100 dark:bg-brand-darkBg dark:text-gray-100 antialiased selection:bg-brand-blue selection:text-black">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // --- COMPLETE BILINGUAL DICTIONARY ---
+        const translations = {
+            ar: {
+                nav: {
+                    home: "الرئيسية",
+                    services: "الخدمات الهندسية",
+                    calculator: "المحاكي والحاسبة",
+                    portfolio: "سجل المشاريع",
+                    process: "منهجية العمل",
+                    team: "فريق المهندسين",
+                    quote: "طلب استشارة"
+                },
+                hero: {
+                    badge: "FOUR MINDS • ONE SOUND",
+                    title: "نصمم وننفذ الصوت بدقة هندسية تحقق",
+                    highlight: "النقاط الأكوستيكية الأسمى",
+                    subtitle: "فريق AudioCrew المتخصص في تحليل وتصميم وتنفيذ الأنظمة الصوتية الاحترافية للمساجد، الكنائس، المنشآت الحكومية، والساحات المفتوحة مع أقصى درجة وضوح للحديث (STI).",
+                    ctaPrimary: "تواصل مباشر مع المهندسين",
+                    ctaSecondary: "استكشف الحاسبة الأكوستيكية",
+                    dspTitle: "// محاكي النطاق الترددي والـ DSP المباشر (Interactive Audio EQ)"
+                },
+                services: {
+                    tag: "الخدمات الهندسية الشاملة",
+                    title: "حلول صوتية متكاملة من الدراسة الأكوستيكية إلى التسليم النهائي",
+                    items: [
+                        { icon: "📐", title: "تصميم ومعمارية الأنظمة الصوتية", desc: "تخطيط النطاق الصوتي واختيار السماعات وزوايا التوجيه المناسبة لكل مساحة هندسية لمنع الفجوات الصوتية." },
+                        { icon: "📊", title: "التحليل الأكوستيكي وSTI", desc: "حسابات زمن الترديد (RT60) ودرجة وضوح الكلام وقمع الارتدادات والصدى المعماري المعقد." },
+                        { icon: "🛠️", title: "التنفيذ المعاير والميداني", desc: "تركيب الكابلات والتمديدات المحمية الشديدة التحمل وتجميع الكابينات وتثبيت المعدات بمعايير سلامة عالمية." },
+                        { icon: "🏛️", title: "أنظمة الصوت المغلقة والمساجد", desc: "حلول متوازنة للمساجد والقاعات والمدرجات تضمن توزيع الصوت بالتساوي وبدون إجهاد لسمع المصلين والجمهور." },
+                        { icon: "📢", title: "الأنظمة الخارجية والساحات", desc: "تجهيز الساحات والمساحات المفتوحة بسماعات مقاومة للعوامل الجوية (IP65) وحسابات الانتشار البعيد." },
+                        { icon: "🎛️", title: "المعايرة وبرمجة الـ DSP", desc: "برمجة أجهزة المعالجة الرقمية ومعادلة الترددات بالـ Parametric EQ لمنع الفيدباك (الصفير) نهائياً." }
+                    ]
+                },
+                calculator: {
+                    tag: "الحاسبة الأكوستيكية الذكية",
+                    title: "حاسبة المواصفات الهندسية الشاملة لمنشأتك",
+                    subtitle: "حدد أبعاد المساحة المترية ونوع المنشأة للحصول فوراً على القدرة المطلوبة بالواط، عدد السماعات، وتقدير زمن الترديد RT60.",
+                    facilityType: "نوع المنشأة / المبنى",
+                    typeMosque: "مسجد / دار مناسبات (RT60 مرتفع)",
+                    typeChurch: "كنيسة / صالة روحيّة (حجم كبير)",
+                    typeGov: "قاعة مؤتمرات / مبنى حكومي (وضوح كلام عالي)",
+                    typeOutdoor: "صحن / ساحة خارجية مفتوحة (تغطية بعيدة)",
+                    length: "الطول (متر):",
+                    width: "العرض (متر):",
+                    height: "الارتفاع (متر):",
+                    tier: "مستوى التجهيز الهندسي",
+                    tierEssential: "أساسي (Essential Setup)",
+                    tierPro: "احترافي (Professional Grade)",
+                    tierAdvanced: "متقدم شامل (Advanced Dante Integrated)",
+                    calcResultTitle: "نتائج الدراسة الأكوستيكية المبدئية:",
+                    calculatedArea: "المساحة الإجمالية:",
+                    calculatedVolume: "الحجم الهيكلي:",
+                    speakersNeeded: "عدد السماعات الموصى به:",
+                    rmsPower: "القدرة المطلوبة (RMS):",
+                    rt60Estimate: "تقدير زمن الترديد RT60:",
+                    stiRating: "مؤشر وضوح الكلام المتوقع (STI):",
+                    dspSpec: "توصية معالج الـ DSP:",
+                    cta: "اعتماد هذه المواصفات وطلب تسعير"
+                },
+                portfolio: {
+                    tag: "معرض الأعمال والأنظمة",
+                    title: "مشاريع أنجزت بدقة هندسية عالية",
+                    subtitle: "استعرض نماذج من المشاريع التي قام فريق AudioCrew بتصميمها وتنفيذها.",
+                    filterAll: "الكل",
+                    filterMosque: "مساجد وعبادة",
+                    filterHall: "قاعات ومؤتمرات",
+                    filterOutdoor: "ساحات مفتوحة",
+                    viewDetails: "عرض التفاصيل الهندسية",
+                    closeModal: "إغلاق"
+                },
+                process: {
+                    tag: "منهجية العمل الهندسية",
+                    title: "خطواتنا المعتمدة لضمان أعلى جودة صوتية",
+                    steps: [
+                        { step: "01", title: "الاستشارة والأبعاد", desc: "رفع الأبعاد المعمارية ودراسة نوع الأسطح والارتفاعات والأسقف." },
+                        { step: "02", title: "المحاكاة الأكوستيكية", desc: "تحليل النطاق الصوتي بواسطة الحاسوب وحسابات وزوايا انتشار الصوت." },
+                        { step: "03", title: "المخطط والتوصيف", desc: "اختيار قائمة الأجهزة والقدرات الكهربائية والصوتية المناسبة." },
+                        { step: "04", title: "التمديد والتركيب", desc: "تنفيذ التمديدات بكابلات نحاسية معزولة وتثبيت السماعات وفق معايير الأمان." },
+                        { step: "05", title: "برمجة الـ DSP والـ EQ", desc: "ضبط المعالجة الرقمية وعزل الصفير وإلغاء التداخلات الترددية." },
+                        { step: "06", title: "الاختبار والتسليم", desc: "قياس STI الفعلي وتسليم النظام وتدريب فريق التشغيل مع ضمان شامل." }
+                    ]
+                },
+                team: {
+                    tag: "فريق المهندسين",
+                    title: "FOUR MINDS • ONE SOUND",
+                    subtitle: "أربعة مهندسين بصوت واحد، يجمعون الخبرة الأكوستيكية والتقنية لضمان نقاء الصوت في منشأتك.",
+                    members: [
+                        { name: "مهندس التصميم والتحليل الأكوستيكي", role: "Acoustic Design & STI Specialist", desc: "متخصص في دراسة الهندسة المعمارية وحسابات التغطية الصوتية ونسبة وضوح الكلام (STI) وتحليل RT60." },
+                        { name: "مهندس المعالجة الرقمية (DSP)", role: "DSP & Signal Processing Specialist", desc: "خبير في برمجة وحدات المعالجة الرقمية، المعايرة الصوتية، ومعادلة الترددات Parametric EQ." },
+                        { name: "مهندس التنفيذ والتركيب الميداني", role: "Field Implementation Engineer", desc: "مسؤول عن الإشراف على التمديدات والتجميع المعزول للكابينات وتثبيت السماعات بمعايير الأمان." },
+                        { name: "مهندس الجودة والاختبار النهائي", role: "Calibration & Quality Control", desc: "يتولى القياسات الصوتية النهائية والتأكد من خلو النظام من الفيدباك وتسليم المشروع وتدريب العميل." }
+                    ]
+                },
+                quote: {
+                    tag: "التواصل والتسعير المباشر",
+                    title: "ابدأ تصميم النظام الصوتي لمنشأتك الآن",
+                    subtitle: "قم بتعبئة النموذج وسيتواصل معك أحد المهندسين الأربعة لتقديم الدراسة المبدئية والإنشائية.",
+                    name: "الاسم بالكامل *",
+                    phone: "رقم الهاتف / واتساب *",
+                    facility: "نوع المنشأة",
+                    currency: "العملة المفضلة للتسعير",
+                    budget: "الميزانية المتوقعة",
+                    desc: "تفاصيل المشروع والتحديات الصوتية الحالية *",
+                    submit: "إرسال طلب الاستشارة الفنية",
+                    successTitle: "تم استلام طلبك بنجاح!",
+                    successDesc: "شكراً لتواصلك مع AudioCrew. يمكنك المتابعة الفورية مع فريقنا الهندسي مباشرة عبر الواتساب مع كامل التفاصيل.",
+                    whatsappBtn: "المتابعة المباشرة عبر واتساب مع التفاصيل"
+                },
+                footer: {
+                    rights: "جميع الحقوق محفوظة لـ AudioCrew © 2026. Four Minds • One Sound."
+                }
+            },
+            en: {
+                nav: {
+                    home: "Home",
+                    services: "Services",
+                    calculator: "Calculator & DSP",
+                    portfolio: "Portfolio",
+                    process: "Process",
+                    team: "Engineers",
+                    quote: "Request Quote"
+                },
+                hero: {
+                    badge: "FOUR MINDS • ONE SOUND",
+                    title: "Engineered Sound Solutions Designed for",
+                    highlight: "Acoustic Perfection",
+                    subtitle: "AudioCrew is a specialized team of 4 audio engineers dedicated to acoustic analysis, design, and seamless implementation for mosques, churches, government buildings, and open spaces with maximum Speech Intelligibility (STI).",
+                    ctaPrimary: "Connect With Engineers",
+                    ctaSecondary: "Explore System Calculator",
+                    dspTitle: "// LIVE DSP FREQUENCY SPECTRUM & EQUALIZER SIMULATOR"
+                },
+                services: {
+                    tag: "ENGINEERING SERVICES",
+                    title: "End-to-End Audio Solutions From Acoustic Study to Handover",
+                    items: [
+                        { icon: "📐", title: "System Architecture & Design", desc: "Coverage mapping, speaker placement, and precise throw angles for every architectural layout without dead zones." },
+                        { icon: "📊", title: "Acoustic & STI Analysis", desc: "Reverberation time (RT60) calculations, speech intelligibility index, and architectural echo suppression." },
+                        { icon: "🛠️", title: "Field Installation & Cabling", desc: "Heavy-duty shielded cabling, clean rack integration, and structural speaker mounting safety." },
+                        { icon: "🏛️", title: "Indoor Sound & Mosques", desc: "Balanced acoustic systems for mosques, halls, and auditoriums ensuring uniform sound distribution." },
+                        { icon: "📢", title: "Outdoor & High-Throw Audio", desc: "IP65 weatherproof speaker deployments designed for long-distance outdoor acoustic propagation." },
+                        { icon: "🎛️", title: "DSP Calibration & Tuning", desc: "Digital signal processing, parametric EQ tuning, and active gain-before-feedback optimization." }
+                    ]
+                },
+                calculator: {
+                    tag: "SMART ACOUSTIC CALCULATOR",
+                    title: "Calculate Comprehensive Specifications for Your Venue",
+                    subtitle: "Input venue dimensions in meters to receive immediate recommendations for wattage, speaker density, RT60 reverberation, and DSP specs.",
+                    facilityType: "Venue / Building Type",
+                    typeMosque: "Mosque / Event Center (High Reverberation)",
+                    typeChurch: "Church / Worship Sanctuary (Large Volume)",
+                    typeGov: "Conference / Gov Building (High STI Speech)",
+                    typeOutdoor: "Courtyard / Outdoor Open Plaza (Long Throw)",
+                    length: "Length (Meters):",
+                    width: "Width (Meters):",
+                    height: "Height (Meters):",
+                    tier: "Engineering Tier",
+                    tierEssential: "Essential Setup",
+                    tierPro: "Professional Grade",
+                    tierAdvanced: "Advanced Dante Integrated",
+                    calcResultTitle: "PRELIMINARY ACOUSTIC SPECIFICATIONS:",
+                    calculatedArea: "Total Surface Area:",
+                    calculatedVolume: "Structural Volume:",
+                    speakersNeeded: "Recommended Loudspeakers:",
+                    rmsPower: "Required Power (RMS):",
+                    rt60Estimate: "Estimated RT60 Time:",
+                    stiRating: "Expected STI Rating:",
+                    dspSpec: "DSP Matrix Recommendation:",
+                    cta: "Apply Specifications & Request Quote"
+                },
+                portfolio: {
+                    tag: "PORTFOLIO & PROJECTS",
+                    title: "Engineered Solutions In Action",
+                    subtitle: "Explore selected projects designed, installed, and calibrated by AudioCrew.",
+                    filterAll: "All Projects",
+                    filterMosque: "Mosques & Worship",
+                    filterHall: "Halls & Conference",
+                    filterOutdoor: "Outdoor Plazas",
+                    viewDetails: "View Technical Details",
+                    closeModal: "Close"
+                },
+                process: {
+                    tag: "ENGINEERING PROCESS",
+                    title: "Our Proven Workflow for Acoustic Excellence",
+                    steps: [
+                        { step: "01", title: "Consultation & Dimensions", desc: "Architectural dimensions capture and boundary surface material assessment." },
+                        { step: "02", title: "Acoustic Simulation", desc: "Computerized sound coverage mapping and acoustic dispersion analysis." },
+                        { step: "03", title: "System Blueprint", desc: "Hardware selection, electrical load calculation, and signal matrix routing." },
+                        { step: "04", title: "Field Installation", desc: "Shielded cabling, clean rack wiring, and heavy-duty structural mounting." },
+                        { step: "05", title: "DSP Programming", desc: "Parametric EQ tuning, time alignment delay, and active feedback suppression." },
+                        { step: "06", title: "Testing & Handover", desc: "Real-world STI validation, live stress testing, and client system training." }
+                    ]
+                },
+                team: {
+                    tag: "OUR TEAM",
+                    title: "FOUR MINDS • ONE SOUND",
+                    subtitle: "Four specialized audio engineers with one unified vision: delivering absolute acoustic clarity for your venue.",
+                    members: [
+                        { name: "Acoustic Design Engineer", role: "Acoustic Design & STI Specialist", desc: "Specialized in architectural dimensioning, coverage simulation, STI calculations, and RT60 room acoustics." },
+                        { name: "DSP & Processing Specialist", role: "DSP & Signal Processing Specialist", desc: "Expert in DSP architecture, digital audio routing, room equalization, and dynamic gain control." },
+                        { name: "Field Implementation Engineer", role: "Field Implementation Engineer", desc: "Oversees hardware mounting, shielded cable runs, structural safety, and rack organization." },
+                        { name: "Calibration & Quality Engineer", role: "Calibration & Quality Control", desc: "Handles real-world frequency tuning, feedback suppression, STI validation, and system handover." }
+                    ]
+                },
+                quote: {
+                    tag: "GET IN TOUCH",
+                    title: "Start Designing Your Venue's Audio System",
+                    subtitle: "Fill out the project details and one of our 4 engineers will contact you directly with an initial review.",
+                    name: "Full Name *",
+                    phone: "Phone / WhatsApp *",
+                    facility: "Facility Type",
+                    currency: "Preferred Currency",
+                    budget: "Expected Budget Tier",
+                    desc: "Project details & current acoustic challenges *",
+                    submit: "Send Technical Inquiry",
+                    successTitle: "Inquiry Received Successfully!",
+                    successDesc: "Thank you for reaching out to AudioCrew. You can also directly connect with our engineering team on WhatsApp.",
+                    whatsappBtn: "Continue Directly on WhatsApp with Specs"
+                },
+                footer: {
+                    rights: "All rights reserved. AudioCrew © 2026 - Four Minds • One Sound."
+                }
+            }
+        };
+
+        // --- SAMPLE PORTFOLIO DATA ---
+        const portfolioItems = [
+            {
+                id: 1,
+                category: "mosque",
+                titleAr: "مجمع المصلين الكبير - القاهرة",
+                titleEn: "Grand Congregational Complex - Cairo",
+                descAr: "دراسة أكوستيكية كاملة لمسجد بمساحة 1200 متر مربع مع علاج زمن الترديد RT60 وبرمجة DSP رباعي المناطق.",
+                descEn: "Full acoustic simulation for a 1200m² mosque with RT60 optimization and 4-zone DSP integration.",
+                tech: "Dante DSP, Line Array Columns, Custom Parametric EQ",
+                sti: "0.78 (Excellent)"
+            },
+            {
+                id: 2,
+                category: "hall",
+                titleAr: "مركز القوات المسلحة للمؤتمرات",
+                titleEn: "Armed Forces Conference Center",
+                descAr: "تجهيز قاعة مؤتمرات بسماعات مخفية ونظام عزل تغذية مرتدة (Anti-Feedback) احترافي.",
+                descEn: "Conference auditorium setup with active anti-feedback matrix and boundary microphones.",
+                tech: "Digital Matrix Mixer, Wireless Boundary Mics, Time-Delay Speakers",
+                sti: "0.82 (Exceptional)"
+            },
+            {
+                id: 3,
+                category: "outdoor",
+                titleAr: "صحن الساحة الخارجية الكبرى",
+                titleEn: "Grand Outdoor Plaza & Courtyard",
+                descAr: "تغطية ساحة مفتوحة بسماعات مقاومة للعوامل الجوية وحسابات انتشار الصوت لمسافة تصل إلى 80 متراً.",
+                descEn: "Outdoor courtyard coverage using IP65 weatherproof high-throw column arrays.",
+                tech: "IP65 Weatherproof Speakers, High-RMS Power Amps, Delay Towers",
+                sti: "0.71 (Good Outdoor)"
+            }
+        ];
+
+        // --- BRAND LOGO COMPONENT ---
+        const AudioCrewLogo = ({ isDark }) => {
+            return (
+                <div className="flex items-center gap-3 group cursor-pointer">
+                    <div className="relative w-12 h-12 flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-blue via-brand-deepBlue to-brand-orange opacity-80 blur-md group-hover:blur-lg transition-all animate-pulse-glow"></div>
+                        <div className="absolute inset-[2px] rounded-full bg-brand-darkBg flex items-center justify-center border border-brand-blue/60 shadow-inner">
+                            <svg viewBox="0 0 100 100" className="w-9 h-9 transform group-hover:scale-110 transition-transform duration-300">
+                                <circle cx="50" cy="50" r="44" fill="none" stroke="url(#logoGrad)" strokeWidth="3.5" />
+                                <path d="M 22 52 A 28 28 0 0 1 78 52" fill="none" stroke="#00F0FF" strokeWidth="4.5" strokeLinecap="round" />
+                                <rect x="17" y="46" width="9" height="18" rx="4.5" fill="#0055FF" />
+                                <rect x="74" y="46" width="9" height="18" rx="4.5" fill="#FF5500" />
+                                <path d="M 46 26 L 33 52 H 58 M 52 26 V 68" fill="none" stroke="url(#metalGrad)" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <line x1="28" y1="52" x2="28" y2="60" stroke="#00F0FF" strokeWidth="2.5" strokeLinecap="round" className="animate-pulse" />
+                                <line x1="72" y1="52" x2="72" y2="60" stroke="#FF5500" strokeWidth="2.5" strokeLinecap="round" className="animate-pulse" />
+                                <defs>
+                                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#00F0FF" />
+                                        <stop offset="50%" stopColor="#0055FF" />
+                                        <stop offset="100%" stopColor="#FF5500" />
+                                    </linearGradient>
+                                    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#FFFFFF" />
+                                        <stop offset="60%" stopColor="#00F0FF" />
+                                        <stop offset="100%" stopColor="#0055FF" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-xl font-black font-mono tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand-blue via-white to-brand-orange">
+                            Audio<span className="text-brand-orange">Crew</span>
+                        </span>
+                        <span className="text-[8px] font-mono tracking-widest uppercase text-gray-400 font-bold mt-1">
+                            FOUR MINDS • ONE SOUND
+                        </span>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP COMPONENT ---
+        function App() {
+            const [lang, setLang] = useState(() => localStorage.getItem('audiocrew_lang') || 'ar');
+            const [isDark, setIsDark] = useState(true);
+            const [mobileMenu, setMobileMenu] = useState(false);
+
+            // Calculator Interactive State
+            const [calcType, setCalcType] = useState('mosque');
+            const [calcLength, setCalcLength] = useState(20);
+            const [calcWidth, setCalcWidth] = useState(15);
+            const [calcHeight, setCalcHeight] = useState(6);
+            const [calcTier, setCalcTier] = useState('pro');
+
+            // DSP Audio EQ Controls Simulation State
+            const [eqBass, setEqBass] = useState(3);
+            const [eqMid, setEqMid] = useState(-1);
+            const [eqTreble, setEqTreble] = useState(4);
+            const [eqGain, setEqGain] = useState(0);
+
+            // Portfolio Modal State
+            const [activePortFilter, setActivePortFilter] = useState('all');
+            const [selectedProject, setSelectedProject] = useState(null);
+
+            // Quote Form State
+            const [quoteSubmitted, setQuoteSubmitted] = useState(false);
+            const [quoteData, setQuoteData] = useState({});
+
+            const t = translations[lang];
+
+            // Handle Theme & LocalStorage
+            useEffect(() => {
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                    document.body.className = "bg-brand-darkBg text-gray-100 antialiased selection:bg-brand-blue selection:text-black";
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.body.className = "bg-brand-lightBg text-gray-800 antialiased selection:bg-brand-orange selection:text-white";
+                }
+            }, [isDark]);
+
+            // Handle Language Direction
+            const toggleLang = () => {
+                const nextLang = lang === 'ar' ? 'en' : 'ar';
+                setLang(nextLang);
+                localStorage.setItem('audiocrew_lang', nextLang);
+                document.documentElement.dir = nextLang === 'ar' ? 'rtl' : 'ltr';
+                document.documentElement.lang = nextLang;
+            };
+
+            // Canvas Background Particles Animation
+            const particleCanvasRef = useRef(null);
+            useEffect(() => {
+                const canvas = particleCanvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let animationId;
+
+                const resize = () => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                };
+                window.addEventListener('resize', resize);
+                resize();
+
+                const particles = Array.from({ length: 45 }, () => ({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    radius: Math.random() * 2 + 1,
+                    color: Math.random() > 0.5 ? '#00F0FF' : '#FF5500'
+                }));
+
+                const render = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    particles.forEach((p, idx) => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = p.color;
+                        ctx.fill();
+
+                        for (let j = idx + 1; j < particles.length; j++) {
+                            const p2 = particles[j];
+                            const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                            if (dist < 140) {
+                                ctx.beginPath();
+                                ctx.moveTo(p.x, p.y);
+                                ctx.lineTo(p2.x, p2.y);
+                                ctx.strokeStyle = isDark ? 'rgba(0, 240, 255, 0.05)' : 'rgba(0, 85, 255, 0.08)';
+                                ctx.stroke();
+                            }
+                        }
+                    });
+                    animationId = requestAnimationFrame(render);
+                };
+                render();
+
+                return () => {
+                    window.removeEventListener('resize', resize);
+                    cancelAnimationFrame(animationId);
+                };
+            }, [isDark]);
+
+            // Interactive DSP Visualizer Canvas
+            const eqCanvasRef = useRef(null);
+            useEffect(() => {
+                const canvas = eqCanvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let animationId;
+                let phase = 0;
+
+                const render = () => {
+                    canvas.width = canvas.parentElement.offsetWidth;
+                    canvas.height = canvas.parentElement.offsetHeight;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    const bars = 40;
+                    const barWidth = canvas.width / bars;
+
+                    for (let i = 0; i < bars; i++) {
+                        // Dynamically scale height based on state sliders (Bass, Mid, Treble)
+                        let freqFactor = 1;
+                        if (i < 12) freqFactor += eqBass * 0.12;
+                        else if (i < 28) freqFactor += eqMid * 0.12;
+                        else freqFactor += eqTreble * 0.12;
+
+                        const sine = Math.sin(i * 0.2 + phase) * 0.3 + Math.cos(i * 0.15 - phase) * 0.3 + 0.5;
+                        const h = Math.max(10, sine * canvas.height * 0.7 * Math.max(0.2, freqFactor + eqGain * 0.05));
+                        const x = i * barWidth;
+                        const y = (canvas.height - h) / 2;
+
+                        const grad = ctx.createLinearGradient(0, y, 0, y + h);
+                        grad.addColorStop(0, '#00F0FF');
+                        grad.addColorStop(0.5, '#0055FF');
+                        grad.addColorStop(1, '#FF5500');
+
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        if (ctx.roundRect) ctx.roundRect(x + 2, y, barWidth - 4, h, 3);
+                        else ctx.rect(x + 2, y, barWidth - 4, h);
+                        ctx.fill();
+                    }
+
+                    phase += 0.05;
+                    animationId = requestAnimationFrame(render);
+                };
+                render();
+
+                return () => cancelAnimationFrame(animationId);
+            }, [eqBass, eqMid, eqTreble, eqGain]);
+
+            // Calculated Specs Logic
+            const calculatedSpecs = useMemo(() => {
+                const area = calcLength * calcWidth;
+                const volume = area * calcHeight;
+                let speakerCount = Math.ceil(area / (calcType === 'outdoor' ? 45 : 30));
+                let wattage = Math.ceil(volume * (calcType === 'church' ? 2.8 : 2.2));
+                let rt60 = (0.161 * volume / (area * 0.25)).toFixed(2);
+                let sti = rt60 > 2.5 ? '0.58 (Fair)' : rt60 > 1.8 ? '0.68 (Good)' : '0.82 (Excellent)';
+                let dsp = calcTier === 'essential' ? 'Analog Equalizer & Mixer Setup' : calcTier === 'pro' ? '8x8 Digital DSP Matrix with Active Anti-Feedback' : 'Networked Dante DSP with Auto-EQ & Speaker Delay';
+
+                return { area, volume, speakerCount, wattage, rt60, sti, dsp };
+            }, [calcLength, calcWidth, calcHeight, calcType, calcTier]);
+
+            // Handle Quote Submit
+            const handleQuoteSubmit = (e) => {
+                e.preventDefault();
+                const data = {
+                    name: e.target.name.value,
+                    phone: e.target.phone.value,
+                    facility: e.target.facility.value,
+                    currency: e.target.currency.value,
+                    budget: e.target.budget.value,
+                    desc: e.target.desc.value,
+                };
+                setQuoteData(data);
+                setQuoteSubmitted(true);
+            };
+
+            const filteredProjects = portfolioItems.filter(p => activePortFilter === 'all' || p.category === activePortFilter);
+
+            return (
+                <div className="relative min-h-screen overflow-x-hidden">
+                    {/* Background Particle Mesh Canvas */}
+                    <canvas ref={particleCanvasRef} className="fixed inset-0 pointer-events-none z-0 opacity-40" />
+
+                    {/* HEADER / NAVIGATION */}
+                    <header className={`sticky top-0 z-50 transition-all duration-300 border-b ${
+                        isDark ? 'bg-brand-darkBg/90 border-gray-800/80 text-white' : 'bg-white/90 border-gray-200 text-gray-900'
+                    } backdrop-blur-2xl`}>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                            <a href="#home">
+                                <AudioCrewLogo isDark={isDark} />
+                            </a>
+
+                            <nav className="hidden lg:flex items-center gap-7 text-xs font-mono font-bold tracking-wide">
+                                <a href="#home" className="hover:text-brand-blue transition-colors py-1">{t.nav.home}</a>
+                                <a href="#services" className="hover:text-brand-blue transition-colors py-1">{t.nav.services}</a>
+                                <a href="#calculator" className="hover:text-brand-blue transition-colors py-1">{t.nav.calculator}</a>
+                                <a href="#portfolio" className="hover:text-brand-blue transition-colors py-1">{t.nav.portfolio}</a>
+                                <a href="#process" className="hover:text-brand-blue transition-colors py-1">{t.nav.process}</a>
+                                <a href="#team" className="hover:text-brand-blue transition-colors py-1">{t.nav.team}</a>
+                            </nav>
+
+                            <div className="hidden lg:flex items-center gap-4">
+                                <button 
+                                    onClick={() => setIsDark(!isDark)}
+                                    className={`p-2.5 rounded-xl border transition-all ${
+                                        isDark ? 'border-gray-800 bg-brand-cardDark text-amber-400 hover:border-amber-400' : 'border-gray-300 bg-white text-indigo-600 hover:border-indigo-600'
+                                    }`}
+                                    title="Toggle Theme"
+                                >
+                                    {isDark ? '☀️' : '🌙'}
+                                </button>
+
+                                <button 
+                                    onClick={toggleLang} 
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-mono font-bold transition-all ${
+                                        isDark ? 'border-gray-800 bg-brand-cardDark text-gray-300 hover:border-brand-blue' : 'border-gray-300 bg-white text-gray-700 hover:border-brand-blue'
+                                    }`}
+                                >
+                                    <span className="text-brand-orange">🌐</span>
+                                    <span>{lang === 'ar' ? 'English' : 'العربية'}</span>
+                                </button>
+
+                                <a href="#quote" className="relative group overflow-hidden rounded-xl p-[1px]">
+                                    <span className="absolute inset-0 bg-gradient-to-r from-brand-blue via-brand-deepBlue to-brand-orange rounded-xl"></span>
+                                    <span className={`relative block px-5 py-2.5 rounded-xl text-xs font-mono font-bold uppercase transition-all ${
+                                        isDark ? 'bg-brand-darkBg text-white group-hover:bg-opacity-0' : 'bg-white text-gray-900 group-hover:bg-opacity-0 group-hover:text-white'
+                                    }`}>
+                                        {t.nav.quote}
+                                    </span>
+                                </a>
+                            </div>
+
+                            <button onClick={() => setMobileMenu(!mobileMenu)} className={`lg:hidden p-2.5 rounded-xl border ${isDark ? 'border-gray-800 text-gray-300' : 'border-gray-300 text-gray-700'}`}>
+                                ☰
+                            </button>
+                        </div>
+
+                        {/* Mobile Drawer */}
+                        {mobileMenu && (
+                            <div className={`lg:hidden px-6 py-6 border-b space-y-4 ${isDark ? 'bg-brand-cardDark border-gray-800' : 'bg-white border-gray-200'}`}>
+                                <a href="#home" onClick={() => setMobileMenu(false)} className="block text-sm font-bold">{t.nav.home}</a>
+                                <a href="#services" onClick={() => setMobileMenu(false)} className="block text-sm font-bold">{t.nav.services}</a>
+                                <a href="#calculator" onClick={() => setMobileMenu(false)} className="block text-sm font-bold">{t.nav.calculator}</a>
+                                <a href="#portfolio" onClick={() => setMobileMenu(false)} className="block text-sm font-bold">{t.nav.portfolio}</a>
+                                <a href="#process" onClick={() => setMobileMenu(false)} className="block text-sm font-bold">{t.nav.process}</a>
+                                <a href="#team" onClick={() => setMobileMenu(false)} className="block text-sm font-bold">{t.nav.team}</a>
+                                <div className="pt-4 flex items-center justify-between border-t border-gray-700/50">
+                                    <button onClick={toggleLang} className="text-xs font-mono font-bold text-brand-blue">🌐 {lang === 'ar' ? 'English' : 'العربية'}</button>
+                                    <button onClick={() => setIsDark(!isDark)} className="text-xs font-mono font-bold text-brand-orange">{isDark ? '☀️ Light' : '🌙 Dark'}</button>
+                                </div>
+                            </div>
+                        )}
+                    </header>
+
+                    {/* HERO SECTION */}
+                    <section id="home" className="relative min-h-[90vh] flex items-center justify-center py-20 z-10">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+                            <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-full border text-xs font-mono shadow-xl animate-float ${
+                                isDark ? 'glass-dark border-brand-blue/30 text-brand-blue' : 'glass-light border-brand-deepBlue/30 text-brand-deepBlue'
+                            }`}>
+                                <span className="w-2.5 h-2.5 rounded-full bg-brand-orange animate-ping"></span>
+                                <span className="font-bold tracking-widest">{t.hero.badge}</span>
+                            </div>
+
+                            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight max-w-5xl mx-auto">
+                                {t.hero.title} <span className="gradient-text-brand">{t.hero.highlight}</span>
+                            </h1>
+
+                            <p className={`text-base sm:text-lg max-w-3xl mx-auto leading-relaxed font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {t.hero.subtitle}
+                            </p>
+
+                            {/* EQUALIZER & DSP INTERACTIVE CANVAS SIMULATOR */}
+                            <div className="pt-4 flex flex-col items-center">
+                                <div className={`p-6 rounded-3xl border w-full max-w-3xl space-y-4 ${isDark ? 'glass-dark border-gray-800' : 'glass-light border-gray-300'}`}>
+                                    <div className="h-28 w-full relative">
+                                        <canvas ref={eqCanvasRef} className="w-full h-full rounded-xl" />
+                                    </div>
+
+                                    {/* Real-time Frequency Sliders Controls */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 font-mono text-xs">
+                                        <div className="p-2.5 rounded-xl bg-black/20 text-center">
+                                            <span className="text-gray-400 block mb-1">Bass (100Hz)</span>
+                                            <input type="range" min="-10" max="10" value={eqBass} onChange={(e) => setEqBass(Number(e.target.value))} className="w-full slider-custom" />
+                                            <span className="text-brand-blue font-bold">{eqBass > 0 ? `+${eqBass}` : eqBass} dB</span>
+                                        </div>
+                                        <div className="p-2.5 rounded-xl bg-black/20 text-center">
+                                            <span className="text-gray-400 block mb-1">Mid (1kHz)</span>
+                                            <input type="range" min="-10" max="10" value={eqMid} onChange={(e) => setEqMid(Number(e.target.value))} className="w-full slider-custom" />
+                                            <span className="text-brand-blue font-bold">{eqMid > 0 ? `+${eqMid}` : eqMid} dB</span>
+                                        </div>
+                                        <div className="p-2.5 rounded-xl bg-black/20 text-center">
+                                            <span className="text-gray-400 block mb-1">Treble (8kHz)</span>
+                                            <input type="range" min="-10" max="10" value={eqTreble} onChange={(e) => setEqTreble(Number(e.target.value))} className="w-full slider-custom" />
+                                            <span className="text-brand-orange font-bold">{eqTreble > 0 ? `+${eqTreble}` : eqTreble} dB</span>
+                                        </div>
+                                        <div className="p-2.5 rounded-xl bg-black/20 text-center">
+                                            <span className="text-gray-400 block mb-1">Gain / Vol</span>
+                                            <input type="range" min="-5" max="5" value={eqGain} onChange={(e) => setEqGain(Number(e.target.value))} className="w-full slider-custom" />
+                                            <span className="text-emerald-400 font-bold">{eqGain > 0 ? `+${eqGain}` : eqGain} dB</span>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-[11px] font-mono text-center text-brand-blue font-bold uppercase tracking-wider">
+                                        {t.hero.dspTitle}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-4">
+                                <a href="#quote" className="w-full sm:w-auto bg-gradient-to-r from-brand-blue via-brand-deepBlue to-brand-orange text-white font-bold px-9 py-4 rounded-xl shadow-xl hover:opacity-95 transition-all transform hover:-translate-y-1 text-xs font-mono uppercase">
+                                    {t.hero.ctaPrimary}
+                                </a>
+                                <a href="#calculator" className={`w-full sm:w-auto border font-bold px-9 py-4 rounded-xl transition-all transform hover:-translate-y-1 text-xs font-mono uppercase ${
+                                    isDark ? 'glass-dark border-gray-800 text-white hover:border-brand-blue' : 'glass-light border-gray-300 text-gray-900 hover:border-brand-deepBlue'
+                                }`}>
+                                    {t.hero.ctaSecondary}
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* SERVICES SECTION */}
+                    <section id="services" className={`py-28 border-t relative z-10 ${isDark ? 'bg-brand-darkBg/70 border-gray-800' : 'bg-gray-100/90 border-gray-200'}`}>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center space-y-4 mb-20">
+                                <span className="text-brand-orange font-mono text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-brand-orange/30 bg-brand-orange/10">
+                                    {t.services.tag}
+                                </span>
+                                <h2 className="text-3xl sm:text-5xl font-black gradient-text-brand">{t.services.title}</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {t.services.items.map((s, idx) => (
+                                    <div key={idx} className={`p-8 rounded-2xl border transition-all duration-300 hover:-translate-y-2 group ${isDark ? 'glass-dark border-gray-800' : 'glass-light border-gray-200'}`}>
+                                        <div className="w-14 h-14 bg-brand-blue/10 border border-brand-blue/30 rounded-xl flex items-center justify-center text-brand-blue text-2xl font-mono mb-6 group-hover:bg-brand-blue group-hover:text-black transition-all">
+                                            {s.icon}
+                                        </div>
+                                        <h3 className="text-xl font-bold mb-3">{s.title}</h3>
+                                        <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{s.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* ACOUSTIC CALCULATOR SECTION */}
+                    <section id="calculator" className="py-28 relative z-10">
+                        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center space-y-4 mb-16">
+                                <span className="text-brand-blue font-mono text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-brand-blue/30 bg-brand-blue/10">
+                                    {t.calculator.tag}
+                                </span>
+                                <h2 className="text-3xl sm:text-5xl font-black gradient-text-brand">{t.calculator.title}</h2>
+                                <p className={`text-sm max-w-xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.calculator.subtitle}</p>
+                            </div>
+
+                            <div className={`p-8 sm:p-12 rounded-3xl border shadow-2xl ${isDark ? 'glass-dark border-gray-800' : 'glass-light border-gray-300'}`}>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                                    
+                                    {/* Controls */}
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-xs font-mono font-bold uppercase mb-2 text-gray-400">{t.calculator.facilityType}</label>
+                                            <select value={calcType} onChange={(e) => setCalcType(e.target.value)} className={`w-full p-3.5 rounded-xl text-sm border focus:outline-none ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}>
+                                                <option value="mosque">{t.calculator.typeMosque}</option>
+                                                <option value="church">{t.calculator.typeChurch}</option>
+                                                <option value="gov">{t.calculator.typeGov}</option>
+                                                <option value="outdoor">{t.calculator.typeOutdoor}</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-mono font-bold text-gray-400 mb-1">{t.calculator.length}</label>
+                                                <input type="number" min="5" max="100" value={calcLength} onChange={(e) => setCalcLength(Number(e.target.value))} className={`w-full p-3 rounded-xl text-sm border ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300'}`} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-mono font-bold text-gray-400 mb-1">{t.calculator.width}</label>
+                                                <input type="number" min="5" max="100" value={calcWidth} onChange={(e) => setCalcWidth(Number(e.target.value))} className={`w-full p-3 rounded-xl text-sm border ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300'}`} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-mono font-bold text-gray-400 mb-1">{t.calculator.height}</label>
+                                                <input type="number" min="3" max="30" value={calcHeight} onChange={(e) => setCalcHeight(Number(e.target.value))} className={`w-full p-3 rounded-xl text-sm border ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300'}`} />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-mono font-bold uppercase mb-2 text-gray-400">{t.calculator.tier}</label>
+                                            <select value={calcTier} onChange={(e) => setCalcTier(e.target.value)} className={`w-full p-3.5 rounded-xl text-sm border focus:outline-none ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}>
+                                                <option value="essential">{t.calculator.tierEssential}</option>
+                                                <option value="pro">{t.calculator.tierPro}</option>
+                                                <option value="advanced">{t.calculator.tierAdvanced}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Live Calculated Output Card */}
+                                    <div className={`p-6 rounded-2xl border ${isDark ? 'bg-brand-cardDark border-brand-blue/40' : 'bg-white border-brand-deepBlue/30'} space-y-4 shadow-xl`}>
+                                        <div className="flex items-center justify-between border-b pb-3 border-gray-700/50">
+                                            <span className="text-xs font-mono text-brand-blue font-bold tracking-wider">{t.calculator.calcResultTitle}</span>
+                                            <span className="text-xl">🧮</span>
+                                        </div>
+
+                                        <div className="space-y-2.5 font-mono text-xs">
+                                            <div className="flex justify-between items-center p-2.5 rounded-lg bg-black/20">
+                                                <span className="text-gray-400">{t.calculator.calculatedArea}</span>
+                                                <span className="text-white font-bold">{calculatedSpecs.area} m²</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-2.5 rounded-lg bg-black/20">
+                                                <span className="text-gray-400">{t.calculator.calculatedVolume}</span>
+                                                <span className="text-white font-bold">{calculatedSpecs.volume} m³</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-2.5 rounded-lg bg-black/20">
+                                                <span className="text-gray-400">{t.calculator.speakersNeeded}</span>
+                                                <span className="text-brand-orange font-bold text-sm">{calculatedSpecs.speakerCount} Loudspeakers</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-2.5 rounded-lg bg-black/20">
+                                                <span className="text-gray-400">{t.calculator.rmsPower}</span>
+                                                <span className="text-emerald-400 font-bold text-sm">{calculatedSpecs.wattage} Watts RMS</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-2.5 rounded-lg bg-black/20">
+                                                <span className="text-gray-400">{t.calculator.rt60Estimate}</span>
+                                                <span className="text-brand-blue font-bold">{calculatedSpecs.rt60} Seconds</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-2.5 rounded-lg bg-black/20">
+                                                <span className="text-gray-400">{t.calculator.stiRating}</span>
+                                                <span className="text-indigo-400 font-bold">{calculatedSpecs.sti}</span>
+                                            </div>
+                                            <div className="p-2.5 rounded-lg bg-black/20 space-y-1">
+                                                <span className="text-gray-400 block text-[10px]">{t.calculator.dspSpec}</span>
+                                                <span className="text-brand-blue font-bold text-[11px] leading-tight block">{calculatedSpecs.dsp}</span>
+                                            </div>
+                                        </div>
+
+                                        <a href="#quote" className="block text-center bg-gradient-to-r from-brand-blue to-brand-deepBlue text-black font-bold py-3.5 rounded-xl text-xs font-mono uppercase shadow-lg hover:opacity-90 transition-all">
+                                            {t.calculator.cta}
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* PORTFOLIO SHOWCASE SECTION */}
+                    <section id="portfolio" className={`py-28 border-t relative z-10 ${isDark ? 'bg-brand-darkBg/80 border-gray-800' : 'bg-gray-100/90 border-gray-200'}`}>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center space-y-4 mb-16">
+                                <span className="text-brand-orange font-mono text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-brand-orange/30 bg-brand-orange/10">
+                                    {t.portfolio.tag}
+                                </span>
+                                <h2 className="text-3xl sm:text-5xl font-black gradient-text-brand">{t.portfolio.title}</h2>
+                                <p className={`text-sm max-w-lg mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.portfolio.subtitle}</p>
+
+                                {/* Portfolio Filters */}
+                                <div className="flex flex-wrap justify-center gap-3 pt-6 font-mono text-xs">
+                                    {[
+                                        { key: 'all', label: t.portfolio.filterAll },
+                                        { key: 'mosque', label: t.portfolio.filterMosque },
+                                        { key: 'hall', label: t.portfolio.filterHall },
+                                        { key: 'outdoor', label: t.portfolio.filterOutdoor }
+                                    ].map(f => (
+                                        <button 
+                                            key={f.key}
+                                            onClick={() => setActivePortFilter(f.key)}
+                                            className={`px-5 py-2.5 rounded-xl font-bold transition-all border ${
+                                                activePortFilter === f.key 
+                                                ? 'bg-gradient-to-r from-brand-blue to-brand-deepBlue text-black border-transparent shadow-lg' 
+                                                : isDark ? 'glass-dark border-gray-800 text-gray-300' : 'glass-light border-gray-300 text-gray-700'
+                                            }`}
+                                        >
+                                            {f.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Portfolio Cards Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {filteredProjects.map(p => (
+                                    <div key={p.id} className={`p-8 rounded-3xl border flex flex-col justify-between transition-all duration-300 hover:-translate-y-2 ${isDark ? 'glass-dark border-gray-800' : 'glass-light border-gray-300'}`}>
+                                        <div className="space-y-4">
+                                            <span className="text-xs font-mono font-bold text-brand-blue uppercase tracking-widest block">// {p.category.toUpperCase()}</span>
+                                            <h3 className="text-xl font-bold">{lang === 'ar' ? p.titleAr : p.titleEn}</h3>
+                                            <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                {lang === 'ar' ? p.descAr : p.descEn}
+                                            </p>
+                                        </div>
+
+                                        <div className="pt-6 border-t border-gray-700/40 mt-6 space-y-3">
+                                            <div className="flex justify-between items-center text-[11px] font-mono">
+                                                <span className="text-gray-500">STI Rating:</span>
+                                                <span className="text-emerald-400 font-bold">{p.sti}</span>
+                                            </div>
+                                            <button 
+                                                onClick={() => setSelectedProject(p)}
+                                                className="w-full bg-brand-blue/10 hover:bg-brand-blue hover:text-black text-brand-blue border border-brand-blue/30 font-bold py-2.5 rounded-xl text-xs font-mono transition-all"
+                                            >
+                                                {t.portfolio.viewDetails}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* PROJECT DETAILS MODAL */}
+                    {selectedProject && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                            <div className={`p-8 rounded-3xl border max-w-lg w-full space-y-6 relative ${isDark ? 'bg-brand-cardDark border-brand-blue/40 text-white' : 'bg-white border-gray-300 text-gray-900'}`}>
+                                <h3 className="text-2xl font-black">{lang === 'ar' ? selectedProject.titleAr : selectedProject.titleEn}</h3>
+                                <p className="text-xs leading-relaxed text-gray-400">{lang === 'ar' ? selectedProject.descAr : selectedProject.descEn}</p>
+                                
+                                <div className="space-y-2 font-mono text-xs p-4 rounded-xl bg-black/30 border border-gray-700/50">
+                                    <div><span className="text-gray-400">Integrated Tech:</span> <span className="text-brand-blue">{selectedProject.tech}</span></div>
+                                    <div><span className="text-gray-400">Validated STI Index:</span> <span className="text-emerald-400 font-bold">{selectedProject.sti}</span></div>
+                                </div>
+
+                                <button onClick={() => setSelectedProject(null)} className="w-full bg-brand-orange text-white font-bold py-3 rounded-xl text-xs font-mono uppercase">
+                                    {t.portfolio.closeModal}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* PROCESS TIMELINE */}
+                    <section id="process" className="py-28 relative z-10">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center space-y-4 mb-20">
+                                <span className="text-brand-blue font-mono text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-brand-blue/30 bg-brand-blue/10">
+                                    {t.process.tag}
+                                </span>
+                                <h2 className="text-3xl sm:text-5xl font-black gradient-text-brand">{t.process.title}</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {t.process.steps.map((s, idx) => (
+                                    <div key={idx} className={`p-8 rounded-3xl border relative ${isDark ? 'glass-dark border-gray-800' : 'glass-light border-gray-200'}`}>
+                                        <span className="text-4xl font-mono font-black text-brand-blue/30 block mb-3">{s.step}</span>
+                                        <h3 className="text-lg font-bold mb-2">{s.title}</h3>
+                                        <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{s.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* TEAM SHOWCASE (FOUR MINDS • ONE SOUND) */}
+                    <section id="team" className={`py-28 border-t relative z-10 ${isDark ? 'bg-brand-darkBg/90 border-gray-800' : 'bg-gray-100/90 border-gray-200'}`}>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center space-y-4 mb-20">
+                                <span className="text-brand-orange font-mono text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-brand-orange/30 bg-brand-orange/10">
+                                    {t.team.tag}
+                                </span>
+                                <h2 className="text-3xl sm:text-5xl font-black gradient-text-brand">{t.team.title}</h2>
+                                <p className={`text-sm max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.team.subtitle}</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                {t.team.members.map((m, idx) => (
+                                    <div key={idx} className={`p-6 rounded-3xl border text-center space-y-4 ${isDark ? 'glass-dark border-gray-800' : 'glass-light border-gray-300'}`}>
+                                        <div className="w-20 h-20 rounded-2xl mx-auto bg-gradient-to-tr from-brand-blue via-brand-deepBlue to-brand-orange text-black font-mono font-black text-2xl flex items-center justify-center shadow-lg">
+                                            E0{idx + 1}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-base">{m.name}</h3>
+                                            <span className="text-[11px] font-mono text-brand-blue font-semibold block mt-1">{m.role}</span>
+                                        </div>
+                                        <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{m.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* QUOTE / WHATSAPP GENERATOR */}
+                    <section id="quote" className="py-28 relative z-10">
+                        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center space-y-4 mb-16">
+                                <span className="text-brand-blue font-mono text-xs font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-brand-blue/30 bg-brand-blue/10">
+                                    {t.quote.tag}
+                                </span>
+                                <h2 className="text-3xl sm:text-5xl font-black gradient-text-brand">{t.quote.title}</h2>
+                                <p className={`text-sm max-w-lg mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.quote.subtitle}</p>
+                            </div>
+
+                            <div className={`p-8 sm:p-12 rounded-3xl border shadow-2xl ${isDark ? 'glass-dark border-gray-800' : 'glass-light border-gray-300'}`}>
+                                {!quoteSubmitted ? (
+                                    <form onSubmit={handleQuoteSubmit} className="space-y-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-xs font-mono uppercase text-gray-400 mb-2">{t.quote.name}</label>
+                                                <input type="text" name="name" required placeholder="John Doe" className={`w-full p-3.5 rounded-xl text-sm border focus:outline-none ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-mono uppercase text-gray-400 mb-2">{t.quote.phone}</label>
+                                                <input type="tel" name="phone" required placeholder="+20 100 000 0000" className={`w-full p-3.5 rounded-xl text-sm border focus:outline-none ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`} />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                            <div>
+                                                <label className="block text-xs font-mono uppercase text-gray-400 mb-2">{t.quote.facility}</label>
+                                                <select name="facility" className={`w-full p-3.5 rounded-xl text-sm border focus:outline-none ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}>
+                                                    <option>{t.calculator.typeMosque}</option>
+                                                    <option>{t.calculator.typeChurch}</option>
+                                                    <option>{t.calculator.typeGov}</option>
+                                                    <option>{t.calculator.typeOutdoor}</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-mono uppercase text-gray-400 mb-2">{t.quote.currency}</label>
+                                                <select name="currency" className={`w-full p-3.5 rounded-xl text-sm border focus:outline-none ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}>
+                                                    <option value="EGP">EGP (جنية مصري)</option>
+                                                    <option value="SAR">SAR (ريال سعودي)</option>
+                                                    <option value="USD">USD (Dollar)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-mono uppercase text-gray-400 mb-2">{t.quote.budget}</label>
+                                                <select name="budget" className={`w-full p-3.5 rounded-xl text-sm border focus:outline-none ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}>
+                                                    <option>{t.calculator.tierEssential}</option>
+                                                    <option>{t.calculator.tierPro}</option>
+                                                    <option>{t.calculator.tierAdvanced}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-mono uppercase text-gray-400 mb-2">{t.quote.desc}</label>
+                                            <textarea name="desc" rows="4" required placeholder="..." className={`w-full p-3.5 rounded-xl text-sm border focus:outline-none ${isDark ? 'bg-brand-darkBg border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}></textarea>
+                                        </div>
+
+                                        <button type="submit" className="w-full bg-gradient-to-r from-brand-blue via-brand-deepBlue to-brand-orange text-white font-bold py-4 rounded-xl text-sm font-mono uppercase shadow-xl hover:opacity-95 transition-all">
+                                            {t.quote.submit}
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <div className="text-center py-8 space-y-6">
+                                        <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto">
+                                            ✓
+                                        </div>
+                                        <h3 className="text-2xl font-bold">{t.quote.successTitle}</h3>
+                                        <p className={`text-xs max-w-md mx-auto leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.quote.successDesc}</p>
+                                        <a 
+                                            href={`https://wa.me/201000000000?text=${encodeURIComponent(`Hello AudioCrew Engineers Team,\nI submitted an acoustic inquiry:\n• Name: ${quoteData.name}\n• Phone: ${quoteData.phone}\n• Facility: ${quoteData.facility}\n• Currency & Tier: ${quoteData.currency} (${quoteData.budget})\n• Details: ${quoteData.desc}`)}`}
+                                            target="_blank" 
+                                            className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-4 rounded-xl text-xs font-mono uppercase transition-all shadow-lg"
+                                        >
+                                            {t.quote.whatsappBtn}
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* FOOTER */}
+                    <footer className={`py-12 border-t text-xs font-mono relative z-10 ${isDark ? 'bg-brand-darkBg border-gray-800 text-gray-500' : 'bg-white border-gray-200 text-gray-600'}`}>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <AudioCrewLogo isDark={isDark} />
+                            <p className="text-center">{t.footer.rights}</p>
+                            <div className="flex gap-4">
+                                <a href="#home" className="hover:text-brand-blue">{t.nav.home}</a>
+                                <span>•</span>
+                                <a href="#services" className="hover:text-brand-blue">{t.nav.services}</a>
+                                <span>•</span>
+                                <a href="#quote" className="hover:text-brand-blue">{t.nav.quote}</a>
+                            </div>
+                        </div>
+                    </footer>
+
+                </div>
+            );
+        }
+
+        // Render App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
